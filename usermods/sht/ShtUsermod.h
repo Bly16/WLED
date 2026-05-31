@@ -1,53 +1,43 @@
 #pragma once
 #include "wled.h"
+#include "SHT4x.h" // Nowa biblioteka dla SHT45
 
 #ifdef WLED_DISABLE_MQTT
 #error "This user mod requires MQTT to be enabled."
 #endif
 
-#define USERMOD_SHT_TYPE_SHT30 0
-#define USERMOD_SHT_TYPE_SHT31 1
-#define USERMOD_SHT_TYPE_SHT35 2
-#define USERMOD_SHT_TYPE_SHT85 3
-
-class SHT;
-
 class ShtUsermod : public Usermod
 {
   private:
-    bool enabled = false; // Is usermod enabled or not
-    bool firstRunDone = false; // Remembers if the first config load run had been done
-    bool initDone = false; // Remembers if the mod has been completely initialised
-    bool haMqttDiscovery = false; // Is MQTT discovery enabled or not
-    bool haMqttDiscoveryDone = false; // Remembers if we already published the HA discovery topics
+    bool enabled = false;
+    bool firstRunDone = false;
+    bool initDone = false;
+    bool haMqttDiscovery = false;
+    bool haMqttDiscoveryDone = false;
 
-    // SHT vars
-    SHT *shtTempHumidSensor = nullptr; // Instance of SHT lib
-    byte shtType = 0; // SHT sensor type to be used. Default: SHT30
-    byte unitOfTemp = 0; // Temperature unit to be used. Default: Celsius (0 = Celsius, 1 = Fahrenheit)
-    bool shtInitDone = false; // Remembers if SHT sensor has been initialised
-    bool shtReadDataSuccess = false; // Did we have a successful data read and is a valid temperature and humidity available?
-    const byte shtI2cAddress = 0x44; // i2c address of the sensor. 0x44 is the default for all SHT sensors. Change this, if needed
-    unsigned long shtLastTimeUpdated = 0; // Remembers when we read data the last time
-    bool shtDataRequested = false; // Reading data is done async. This remembers if we asked the sensor to read data
-    float shtCurrentTempC = 0.0f; // Last read temperature in Celsius
-    float shtCurrentHumidity = 0.0f; // Last read humidity in RH%
-
+    // Zmienne SHT45
+    SHT4x *shtTempHumidSensor = nullptr;
+    byte unitOfTemp = 0; // 0 = Celsius, 1 = Fahrenheit
+    bool shtInitDone = false;
+    bool shtReadDataSuccess = false;
+    const byte shtI2cAddress = 0x44; // Standardowy adres I2C dla SHT45
+    unsigned long shtLastTimeUpdated = 0;
+    bool shtDataRequested = false;
+    float shtCurrentTempC = 0.0f;
+    float shtCurrentHumidity = 0.0f;
 
     void initShtTempHumiditySensor();
     void cleanupShtTempHumiditySensor();
     void cleanup();
-    inline bool isShtReady() { return shtInitDone; } // Checks if the SHT sensor has been initialised.
+    inline bool isShtReady() { return shtInitDone; }
 
     void publishTemperatureAndHumidityViaMqtt();
     void publishHomeAssistantAutodiscovery();
     void appendDeviceToMqttDiscoveryMessage(JsonDocument& root);
 
   public:
-    // Strings to reduce flash memory usage (used more than twice)
     static const char _name[];
     static const char _enabled[];
-    static const char _shtType[];
     static const char _unitOfTemp[];
     static const char _haMqttDiscovery[];
 
